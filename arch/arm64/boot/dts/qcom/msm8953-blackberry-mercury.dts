@@ -12,11 +12,11 @@
 /delete-node/ &wcnss_fw_mem;
 
 / {
-	model = "BlackBerry KEYone(mercury)";
+	model = "BlackBerry KEYone (mercury)";
 	compatible = "blackberry,mercury", "qcom,msm8953";
 	chassis-type = "handset";
 	qcom,msm-id = <293 0>;
-	qcom,board-id = <11 0>;
+	qcom,board-id = <8 0x10001>;
 
 	chosen {
 		#address-cells = <2>;
@@ -25,7 +25,7 @@
 
 		framebuffer0: framebuffer@90001000 {
 			compatible = "simple-framebuffer";
-			reg = <0 0x90001000 0 (1920 * 1080 * 3)>;
+			reg = <0 0x90001000 0 (1620 * 1080 * 3)>;
 
 			width = <1080>;
 			height = <1620>;
@@ -132,6 +132,45 @@
 &dsi0_out {
 	data-lanes = <0 1 2 3>;
 	remote-endpoint = <&panel_in>;
+};
+
+&i2c_2{
+        status = "okay";
+        smb1351-charger@1d {
+                compatible = "qcom,smb1351-charger";
+                reg = <0x1d>;
+                qcom,parallel-en-pin-polarity = <1>;
+                qcom,parallel-charger;
+                qcom,float-voltage-mv = <4400>;
+                qcom,recharge-mv = <100>;
+                oem,otg-oc-limit-idx = <0>;   /* 0-1800, 1-500, 2-750, 3-1000, unit: mA */
+                oem,otg-uvlo-limit-idx = <3>; /* 0-2.7, 1-2.9, 2-3.1, 3-3.3, unit: V */
+        };
+};
+
+&i2c_3 {
+	status = "okay";
+
+	touchscreen@38 {
+		compatible = "focaltech,focaltech_ts";
+		reg = <0x38>;
+
+		interrupt-parent = <&tlmm>;
+		interrupts = <65 IRQ_TYPE_EDGE_FALLING>;
+
+		pinctrl-names = "init", "suspend";
+		pinctrl-0 = <&ts_int_active>;
+		pinctrl-1 = <&ts_int_suspend>;
+		syna,reset-delay-ms = <20>;
+		syna,startup-delay-ms = <150>;
+
+		reset-gpios = <&tlmm 64 GPIO_ACTIVE_LOW>;
+
+		vcc-supply = <&pm8953_l10>;
+
+		touchscreen-size-x = <1080>;
+		touchscreen-size-y = <1620>;
+	};
 };
 
 &rpm_requests {
@@ -253,7 +292,7 @@
 };
 
 &tlmm {
-	pmx_mdss_dsi_active: pmx-mdss-dsi-active-state {
+	pmx_mdss_dsi_active: pmx-mdss-dsi-active {
 		pins = "gpio61";
 		function = "gpio";
 		drive-strength = <8>;
@@ -261,8 +300,36 @@
 		output-high;
 	};
 
-	pmx_mdss_dsi_suspend: pmx-mdss-dsi-suspend-state {
+	pmx_mdss_dsi_suspend: pmx-mdss-dsi-suspend {
 		pins = "gpio61";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-pull-down;
+	};
+
+	ts_int_active: ts-int-active {
+		pins = "gpio65";
+                function = "gpio";
+                drive-strength = <8>;
+                bias-pull-up;
+        };
+
+	ts_int_suspend: ts-int-suspend {
+		pins = "gpio65";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-pull-down;
+	};
+
+	ts_reset_active: ts-reset-active {
+		pins = "gpio64";
+		function = "gpio";
+		drive-strength = <8>;
+		bias-pull-up;
+	};
+
+	ts_reset_suspend: ts-reset-suspend {
+		pins = "gpio64";
 		function = "gpio";
 		drive-strength = <2>;
 		bias-pull-down;
